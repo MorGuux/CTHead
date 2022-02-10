@@ -305,7 +305,6 @@ public class test extends Application {
         ImageView thumb_view = new ImageView(thumb_image);
         ThumbLayout.getChildren().add(thumb_view);
 
-        //This bit of code makes a white image
         PixelWriter image_writer = thumb_image.getPixelWriter();
 
         int sliceCount = grey.length;
@@ -315,6 +314,8 @@ public class test extends Application {
 
         int colCount = (int) (thumb_image.getWidth() / (thumbnailSize + thumbnailGap));
 
+        /* For each slice, calculate the row and column for it, create a thumbnail using the GetSlice function,
+        then draw it to the image in the correct position. */
         for (int i = 0; i < sliceCount; i++) {
             int sliceRow = i / colCount;
             int sliceCol = i % colCount;
@@ -323,9 +324,6 @@ public class test extends Application {
             int imageY = sliceRow * (thumbnailSize + thumbnailGap);
 
             Image image = GetSlice(i, thumbnailSize, ImageInterpolation.BILINEAR);
-
-            System.out.println("sliceRow: " + sliceRow + " sliceCol: " + sliceCol);
-            System.out.println("x: " + imageX + " y: " + imageY);
 
             for (int y = 0; y < thumbnailSize; y++) {
                 for (int x = 0; x < thumbnailSize; x++) {
@@ -336,14 +334,18 @@ public class test extends Application {
 
         Scene ThumbScene = new Scene(ThumbLayout, thumb_image.getWidth(), thumb_image.getHeight());
 
-        //Add mouse over handler - the large image is change to the image the mouse is over
+        //Add mouse over handler
         thumb_view.addEventHandler(MouseEvent.MOUSE_MOVED, event -> {
-            System.out.println(event.getX() + "  " + event.getY());
-
-            activeSlice = (int) (event.getY() / (thumbnailSize + thumbnailGap)) * colCount
+            int selectedSlice = (int) (event.getY() / (thumbnailSize + thumbnailGap)) * colCount
                         + (int) (event.getX() / (thumbnailSize + thumbnailGap));
 
-            updateImage();
+            //Only update if the slice has changed
+            if (selectedSlice != activeSlice) {
+                System.out.println("Active Slice: " + (selectedSlice + 1));
+                activeSlice = selectedSlice;
+                updateImage();
+            }
+
             event.consume();
         });
 
