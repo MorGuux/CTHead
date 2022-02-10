@@ -68,7 +68,7 @@ public class test extends Application {
         //int width=1024, height=1024; //maximum size of the image
         //We need 3 things to see an image
         //1. We need to create the image
-        Image top_image = GetSlice(76, 256, ImageInterpolation.NEAREST_NEIGHBOUR, 1); //go get the slice image
+        Image top_image = GetSlice(activeSlice, imageSize, activeInterpolation, activeGamma); //go get the slice image
         //2. We create a view of that image
         TopView = new ImageView(top_image); //and then see 3. below
 
@@ -141,8 +141,8 @@ public class test extends Application {
     }
 
     private void updateImage() {
-        TopView.setImage(null); //clear the old image
-        Image newImage = GetSlice(activeSlice, imageSize, activeInterpolation, activeGamma); //go get the slice image
+        TopView.setImage(null); //Clear the old image
+        Image newImage = GetSlice(activeSlice, imageSize, activeInterpolation, activeGamma); //Get the slice image
         TopView.setImage(newImage); //Update the GUI so the new image is displayed
     }
 
@@ -287,7 +287,7 @@ public class test extends Application {
      * @return lerped value
      */
     public float lerp(float x1, float x2, float x) {
-        return x1 * (1 - x) + x2 * x;
+        return x1 + (x2 - x1) * x;
     }
 
     /**
