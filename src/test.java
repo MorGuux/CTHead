@@ -42,13 +42,8 @@ public class test extends Application {
     short min, max; //min/max value in the 3D volume data set
     ImageView TopView;
     int imageSize = 256; //size of the image
-
-    enum ImageInterpolation {
-        NEAREST_NEIGHBOUR,
-        BILINEAR
-    }
-
     ImageInterpolation activeInterpolation = ImageInterpolation.NEAREST_NEIGHBOUR;
+    int activeSlice = 76;
 
     public static void main(String[] args) {
         launch();
@@ -142,7 +137,7 @@ public class test extends Application {
 
     private void updateImage() {
         TopView.setImage(null); //clear the old image
-        Image newImage = GetSlice(76, imageSize, activeInterpolation); //go get the slice image
+        Image newImage = GetSlice(activeSlice, imageSize, activeInterpolation); //go get the slice image
         TopView.setImage(newImage); //Update the GUI so the new image is displayed
     }
 
@@ -310,14 +305,31 @@ public class test extends Application {
         ImageView thumb_view = new ImageView(thumb_image);
         ThumbLayout.getChildren().add(thumb_view);
 
-        {
-            //This bit of code makes a white image
-            PixelWriter image_writer = thumb_image.getPixelWriter();
-            Color color = Color.color(1, 1, 1);
-            for (int y = 0; y < thumb_image.getHeight(); y++) {
-                for (int x = 0; x < thumb_image.getWidth(); x++) {
-                    //Apply the new colour
-                    image_writer.setColor(x, y, color);
+        //This bit of code makes a white image
+        PixelWriter image_writer = thumb_image.getPixelWriter();
+
+        int sliceCount = grey.length;
+
+        int thumbnailSize = (int) (thumb_image.getWidth() / 12);
+        int thumbnailGap = thumbnailSize / 10;
+
+        int colCount = (int) (thumb_image.getWidth() / (thumbnailSize + thumbnailGap));
+
+        for (int i = 0; i < sliceCount; i++) {
+            int sliceRow = i / colCount;
+            int sliceCol = i % colCount;
+
+            int imageX = sliceCol * (thumbnailSize + thumbnailGap);
+            int imageY = sliceRow * (thumbnailSize + thumbnailGap);
+
+            Image image = GetSlice(i, thumbnailSize, ImageInterpolation.BILINEAR);
+
+            System.out.println("sliceRow: " + sliceRow + " sliceCol: " + sliceCol);
+            System.out.println("x: " + imageX + " y: " + imageY);
+
+            for (int y = 0; y < thumbnailSize; y++) {
+                for (int x = 0; x < thumbnailSize; x++) {
+                    image_writer.setColor(imageX + x, imageY + y, image.getPixelReader().getColor(x, y));
                 }
             }
         }
@@ -327,6 +339,11 @@ public class test extends Application {
         //Add mouse over handler - the large image is change to the image the mouse is over
         thumb_view.addEventHandler(MouseEvent.MOUSE_MOVED, event -> {
             System.out.println(event.getX() + "  " + event.getY());
+
+            activeSlice = (int) (event.getY() / (thumbnailSize + thumbnailGap)) * colCount
+                        + (int) (event.getX() / (thumbnailSize + thumbnailGap));
+
+            updateImage();
             event.consume();
         });
 
@@ -340,6 +357,11 @@ public class test extends Application {
         newWindow.setY(atY);
 
         newWindow.show();
+    }
+
+    enum ImageInterpolation {
+        NEAREST_NEIGHBOUR,
+        BILINEAR
     }
 
 }
