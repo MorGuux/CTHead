@@ -44,6 +44,9 @@ public class test extends Application {
     int imageSize = 256; //size of the image
     ImageInterpolation activeInterpolation = ImageInterpolation.NEAREST_NEIGHBOUR;
     int activeSlice = 76;
+    float activeGamma = 1;
+
+    int[] gammaLUT;
 
     public static void main(String[] args) {
         launch();
@@ -65,7 +68,7 @@ public class test extends Application {
         //int width=1024, height=1024; //maximum size of the image
         //We need 3 things to see an image
         //1. We need to create the image
-        Image top_image = GetSlice(76, 256, ImageInterpolation.NEAREST_NEIGHBOUR); //go get the slice image
+        Image top_image = GetSlice(76, 256, ImageInterpolation.NEAREST_NEIGHBOUR, 1); //go get the slice image
         //2. We create a view of that image
         TopView = new ImageView(top_image); //and then see 3. below
 
@@ -116,7 +119,9 @@ public class test extends Application {
             public void changed(ObservableValue<? extends Number>
                                         observable, Number oldValue, Number newValue) {
 
+                activeGamma = newValue.floatValue();
                 System.out.println(newValue.doubleValue());
+                updateImage();
             }
         });
 
@@ -137,7 +142,7 @@ public class test extends Application {
 
     private void updateImage() {
         TopView.setImage(null); //clear the old image
-        Image newImage = GetSlice(activeSlice, imageSize, activeInterpolation); //go get the slice image
+        Image newImage = GetSlice(activeSlice, imageSize, activeInterpolation, activeGamma); //go get the slice image
         TopView.setImage(newImage); //Update the GUI so the new image is displayed
     }
 
@@ -194,7 +199,7 @@ public class test extends Application {
     }
 
     //Gets an image from slice at given index
-    public Image GetSlice(int sliceIndex, int size, ImageInterpolation interpolation) {
+    public Image GetSlice(int sliceIndex, int size, ImageInterpolation interpolation, float gamma) {
         WritableImage image = new WritableImage(size, size);
         //Find the width and height of the image to be process
         int width = (int) image.getWidth();
@@ -203,6 +208,11 @@ public class test extends Application {
 
         //Get an interface to write to that image memory
         PixelWriter image_writer = image.getPixelWriter();
+
+        gammaLUT = new int[256];
+        for (int i = 0; i < 256; i++) {
+            gammaLUT[i] = (int) ((Math.pow(i / 255.0, 1 / gamma)) * 255);
+        }
 
         //Iterate over all pixels
         for (int j = 0; j < height; j++) {
@@ -233,6 +243,9 @@ public class test extends Application {
                             a1, a2
                     );
                 }
+
+                //Apply gamma correction
+                val = gammaLUT[Math.round(val * 255)] / 255.0f;
 
                 //Apply the new colour
                 image_writer.setColor(i, j, Color.color(val, val, val));
@@ -323,7 +336,7 @@ public class test extends Application {
             int imageX = sliceCol * (thumbnailSize + thumbnailGap);
             int imageY = sliceRow * (thumbnailSize + thumbnailGap);
 
-            Image image = GetSlice(i, thumbnailSize, ImageInterpolation.BILINEAR);
+            Image image = GetSlice(i, thumbnailSize, ImageInterpolation.BILINEAR, activeGamma);
 
             for (int y = 0; y < thumbnailSize; y++) {
                 for (int x = 0; x < thumbnailSize; x++) {
