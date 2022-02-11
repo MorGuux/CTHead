@@ -64,6 +64,7 @@ public class MainController implements Initializable {
             fileChooser.setTitle("Open CT Scan");
             File newFile = fileChooser.showOpenDialog(new Stage());
             if (newFile != null) {
+
                 Dialog<ButtonType> dialog = new Dialog<>();
                 dialog.setTitle("Slice Count");
                 dialog.setHeaderText("How many slices are in the scan?");
@@ -72,6 +73,7 @@ public class MainController implements Initializable {
                 dialog.getDialogPane().setContent(inputTextField);
                 dialog.getDialogPane().getButtonTypes().add(ButtonType.OK);
                 dialog.getDialogPane().getButtonTypes().add(ButtonType.CANCEL);
+
                 Optional<ButtonType> result = dialog.showAndWait();
                 if (result.isPresent() && result.get() == ButtonType.OK) {
                     int sliceCount;
@@ -171,7 +173,6 @@ public class MainController implements Initializable {
 
             //Only update if the slice has changed
             if (selectedSlice != activeSlice) {
-                System.out.println("Active Slice: " + (selectedSlice + 1));
                 activeSlice = selectedSlice;
                 sliceLabel.setText("Slice " + (activeSlice + 1) + " of " + (sliceCount));
                 updateImage();
@@ -196,7 +197,7 @@ public class MainController implements Initializable {
         //Clear the old image
         imageView.setImage(null);
         //Get the slice image
-        Image newImage = dataSet.getSlice(activeSlice, imageSize, activeInterpolation, activeGamma);
+        Image newImage = DataSet.getSlice(activeSlice, imageSize, activeInterpolation, activeGamma);
         //Re-size the image view to the new image dimensions
         imageView.setFitHeight(newImage.getHeight());
         imageView.setFitWidth(newImage.getWidth());
